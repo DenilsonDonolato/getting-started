@@ -1,5 +1,8 @@
 package org.acme.getting.started.model;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class Login {
 
     private String username;
