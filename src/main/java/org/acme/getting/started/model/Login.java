@@ -23,5 +23,10 @@ public class Login {
     public void setUsername(final String username) {
         this.username = username;
     }
+
+    @Override
+    public String toString() {
+        return "{\"username\":\""+getUsername()+"\",\"password\":\"******\"}";
+    }
     
 }

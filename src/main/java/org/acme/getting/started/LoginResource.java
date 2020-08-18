@@ -15,6 +15,8 @@ import org.acme.getting.started.model.LoginResponse;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 @ApplicationScoped
 @Path("/mobile/login")
@@ -22,43 +24,45 @@ import io.smallrye.mutiny.Uni;
 @Consumes(MediaType.APPLICATION_JSON)
 public class LoginResource {
 
+    private Logger logger = LoggerFactory.getLogger(LoginResource.class);
+
     @Inject
     ValidationService validationService;
 
     @POST
     public Uni<Response> login(Login login) {
-        return Uni.createFrom().item(login)
-            .onItem().transform(l -> {
-                if (validationService.validateLogin(l)) {
-                    return Response.status(Status.BAD_REQUEST).build();
-                }
-                LoginResponse response = new LoginResponse(
-                "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTIyNTQyNTcsImF1ZCI6ImdtLWFwcC1hc3Npc3RlZCIsInN1YiI6IjEifQ.Zo6j3Yio5_TYeh45TFjCUoMQe0g3sxVZ82rfwnK7ypw",
-                1, "Fernanda");
-                return Response.ok(response).build();
-            });
+        return Uni.createFrom().item(login).onItem().transform(l -> {
+            if (validationService.validateLogin(l)) {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
+            logger.info("Login " + l);
+            LoginResponse response = new LoginResponse(
+                    "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTIyNTQyNTcsImF1ZCI6ImdtLWFwcC1hc3Npc3RlZCIsInN1YiI6IjEifQ.Zo6j3Yio5_TYeh45TFjCUoMQe0g3sxVZ82rfwnK7ypw",
+                    1, "Fernanda");
+            return Response.ok(response).build();
+        });
     }
 
     @POST
     @Path("/{delay}")
     public Uni<Response> loginWithDelay(Login login, @PathParam long delay) {
-        return Uni.createFrom().item(login).onItem()
-            .transform(l -> {
-                if (delay<=0) {
-                    return Response.status(Status.BAD_REQUEST).build();
-                }
-                try {
-                    Thread.sleep(delay);
-                } catch (Exception e) {
-                    return Response.status(Status.BAD_REQUEST).build();
-                }
-                if (validationService.validateLogin(l)) {
-                    return Response.status(Status.UNAUTHORIZED).build();
-                }
-                LoginResponse response = new LoginResponse(
-                "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTIyNTQyNTcsImF1ZCI6ImdtLWFwcC1hc3Npc3RlZCIsInN1YiI6IjEifQ.Zo6j3Yio5_TYeh45TFjCUoMQe0g3sxVZ82rfwnK7ypw",
-                1, "Mariana");
-                return Response.ok(response).build();
-            });
+        return Uni.createFrom().item(login).onItem().transform(l -> {
+            logger.info("Login "+l+" com delay "+ delay);
+            if (delay <= 0) {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
+            try {
+                Thread.sleep(delay);
+            } catch (Exception e) {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
+            if (validationService.validateLogin(l)) {
+                return Response.status(Status.UNAUTHORIZED).build();
+            }
+            LoginResponse response = new LoginResponse(
+                    "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTIyNTQyNTcsImF1ZCI6ImdtLWFwcC1hc3Npc3RlZCIsInN1YiI6IjEifQ.Zo6j3Yio5_TYeh45TFjCUoMQe0g3sxVZ82rfwnK7ypw",
+                    1, "Mariana");
+            return Response.ok(response).build();
+        });
     }
 }
