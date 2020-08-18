@@ -1,5 +1,7 @@
 package org.acme.getting.started;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -14,17 +16,21 @@ import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 import io.smallrye.mutiny.Uni;
 
+@ApplicationScoped
 @Path("/mobile/login")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class GreetingResource {
+public class LoginResource {
+
+    @Inject
+    ValidationService validationService;
 
     @POST
     public Uni<Response> login(Login login) {
         return Uni.createFrom().item(login)
             .onItem().transform(l -> {
-                if (l.getUsername() == null || l.getPassword()==null) {
-                    return Response.status(Status.UNAUTHORIZED).build();
+                if (validationService.validateLogin(l)) {
+                    return Response.status(Status.BAD_REQUEST).build();
                 }
                 LoginResponse response = new LoginResponse(
                 "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTIyNTQyNTcsImF1ZCI6ImdtLWFwcC1hc3Npc3RlZCIsInN1YiI6IjEifQ.Zo6j3Yio5_TYeh45TFjCUoMQe0g3sxVZ82rfwnK7ypw",
@@ -37,16 +43,16 @@ public class GreetingResource {
     @Path("/{delay}")
     public Uni<Response> loginWithDelay(Login login, @PathParam long delay) {
         return Uni.createFrom().item(login).onItem()
-            .transform(t -> {
+            .transform(l -> {
                 if (delay<=0) {
                     return Response.status(Status.BAD_REQUEST).build();
                 }
                 try {
                     Thread.sleep(delay);
                 } catch (Exception e) {
-                    return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+                    return Response.status(Status.BAD_REQUEST).build();
                 }
-                if (t.getUsername() == null || t.getPassword() == null) {
+                if (validationService.validateLogin(l)) {
                     return Response.status(Status.UNAUTHORIZED).build();
                 }
                 LoginResponse response = new LoginResponse(
